@@ -57,7 +57,7 @@ class Puppet::Network::Handler # :nodoc:
                 @path = hash[:Path]
                 hash.delete(:Path)
             else
-                if defined? Puppet
+                if defined?(Puppet)
                     @path = Puppet[:bucketdir]
                 else
                     @path = File.expand_path("~/.filebucket")

@@ -108,7 +108,7 @@ class Puppet::Parser::Resource < Puppet::Resource
 
     # Has this resource already been finished?
     def finished?
-        defined?(@finished) and @finished
+        @finished
     end
 
     def initialize(*args)
@@ -149,7 +149,7 @@ class Puppet::Parser::Resource < Puppet::Resource
     # Return the resource name, or the title if no name
     # was specified.
     def name
-        @name = self[:name] || self.title unless defined? @name
+        @name = self[:name] || self.title unless defined?(@name)
         @name
     end
 

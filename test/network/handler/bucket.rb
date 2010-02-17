@@ -11,7 +11,7 @@ class TestBucket < Test::Unit::TestCase
     include PuppetTest::ServerTest
 
     def out
-        if defined? @num
+        if defined?(@num)
             @num += 1
         else
             @num = 1
@@ -97,7 +97,7 @@ class TestBucket < Test::Unit::TestCase
     # a list of files that should be on the system
     # just something to test moving files around
     def filelist
-        if defined? @files
+        if defined?(@files)
             return @files
         else
             @files = []

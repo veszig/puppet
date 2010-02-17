@@ -113,7 +113,7 @@ class Puppet::Agent
     end
 
     def sync
-        @sync = Sync.new unless defined?(@sync) and @sync
+        @sync = Sync.new unless @sync
         @sync
     end
 
