@@ -156,7 +156,7 @@ class Puppet::Parser::Compiler
 
                 # If they've disabled lazy evaluation (which the :include function does),
                 # then evaluate our resource immediately.
-          ###      resource.evaluate unless lazy_evaluate
+            ###      resource.evaluate unless lazy_evaluate
                 found << name
             else
                 Puppet.info "Could not find class %s for %s" % [name, node.name]
@@ -362,8 +362,7 @@ class Puppet::Parser::Compiler
         end
 
         unless remaining.empty?
-            raise Puppet::ParseError, "Failed to realize virtual resources %s" %
-                remaining.join(', ')
+            raise Puppet::ParseError, "Failed to realize virtual resources %s" % remaining.join(', ')
         end
     end
 

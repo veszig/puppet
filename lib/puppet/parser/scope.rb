@@ -143,7 +143,7 @@ class Puppet::Parser::Scope
             @scope,@name = scope,name
         end
         def value
-            if    resolved?    then @value 
+            if    resolved?    then @value
             elsif source       then resolved!; @value = source.evaluate
             elsif scope.parent then scope.parent.future_for(name).value
             else                    :undef
@@ -403,8 +403,7 @@ class Puppet::Parser::Scope
                 tmp = ss.scan(/[^\\$]+/)
                 # Puppet.debug("Got other: pos:%d; m:%s" % [ss.pos, tmp])
                 unless tmp
-                    error = Puppet::ParseError.new("Could not parse string %s" %
-                        string.inspect)
+                    error = Puppet::ParseError.new("Could not parse string %s" % string.inspect)
                     {:file= => file, :line= => line}.each do |m,v|
                         error.send(m, v) if v
                     end

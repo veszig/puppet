@@ -368,8 +368,7 @@ describe Puppet::Parser::Scope do
         assert_equal("value", scope.lookupvar("::test"), "did not look up qualified value correctly")
         tests.each do |input, output|
             assert_nothing_raised("Failed to scan %s" % input.inspect) do
-                assert_equal(output, scope.strinterp(input),
-                    'did not parserret %s correctly' % input.inspect)
+                assert_equal(output, scope.strinterp(input), 'did not parserret %s correctly' % input.inspect)
             end
         end
 
@@ -381,11 +380,17 @@ describe Puppet::Parser::Scope do
         %w{d f h l w z}.each do |l|
             string = "\\" + l
             assert_nothing_raised do
-                assert_equal(string, scope.strinterp(string),
+
+                            assert_equal(
+                string, scope.strinterp(string),
+        
                     'did not parserret %s correctly' % string)
             end
 
-            assert(logs.detect { |m| m.message =~ /Unrecognised escape/ },
+
+                        assert(
+                logs.detect { |m| m.message =~ /Unrecognised escape/ },
+        
                 "Did not get warning about escape sequence with %s" % string)
             logs.clear
         end

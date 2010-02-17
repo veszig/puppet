@@ -252,10 +252,8 @@ class TestBucket < Test::Unit::TestCase
         filedir, contents, paths = bucket.class.paths(@bucket, md5)
 
         assert_equal(dir, filedir, "did not use a deeper file structure")
-        assert_equal(File.join(dir, "contents"), contents,
-            "content path is not the deeper version")
-        assert_equal(File.join(dir, "paths"), paths,
-            "paths file path is not the deeper version")
+        assert_equal(File.join(dir, "contents"), contents, "content path is not the deeper version")
+        assert_equal(File.join(dir, "paths"), paths, "paths file path is not the deeper version")
 
         # Store our new text and make sure it gets stored in the new location
         path = "/some/fake/path"
