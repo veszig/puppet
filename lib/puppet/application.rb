@@ -87,223 +87,223 @@ require 'optparse'
 # If it doesn't exist, it defaults to execute the +main+ command if defined.
 #
 class Puppet::Application
+  include Puppet::Util
+
+  @@applications = {}
+  class << self
     include Puppet::Util
+  end
 
-    @@applications = {}
-    class << self
-        include Puppet::Util
+  attr_reader :options, :opt_parser
+
+  def self.[](name)
+    name = symbolize(name)
+    @@applications[name]
+  end
+
+  def should_parse_config
+    @parse_config = true
+  end
+
+  def should_not_parse_config
+    @parse_config = false
+  end
+
+  def should_parse_config?
+    return @parse_config unless @parse_config.nil?
+    @parse_config = true
+  end
+
+  # used to declare a new command
+  def command(name, &block)
+    meta_def(symbolize(name), &block)
+  end
+
+  # used as a catch-all for unknown option
+  def unknown(&block)
+    meta_def(:handle_unknown, &block)
+  end
+
+  # used to declare code that handle an option
+  def option(*options, &block)
+    long = options.find { |opt| opt =~ /^--/ }.gsub(/^--(?:\[no-\])?([^ =]+).*$/, '\1' ).gsub('-','_')
+    fname = "handle_#{long}"
+    if (block_given?)
+      meta_def(symbolize(fname), &block)
+    else
+      meta_def(symbolize(fname)) do |value|
+        self.options["#{long}".to_sym] = value
+      end
+    end
+    @opt_parser.on(*options) do |value|
+      self.send(symbolize(fname), value)
+    end
+  end
+
+  # used to declare accessor in a more natural way in the
+  # various applications
+  def attr_accessor(*args)
+    args.each do |arg|
+      meta_def(arg) do
+        instance_variable_get("@#{arg}".to_sym)
+      end
+      meta_def("#{arg}=") do |value|
+        instance_variable_set("@#{arg}".to_sym, value)
+      end
+    end
+  end
+
+  # used to declare code run instead the default setup
+  def setup(&block)
+    meta_def(:run_setup, &block)
+  end
+
+  # used to declare code to choose which command to run
+  def dispatch(&block)
+    meta_def(:get_command, &block)
+  end
+
+  # used to execute code before running anything else
+  def preinit(&block)
+    meta_def(:run_preinit, &block)
+  end
+
+  def initialize(name, banner = nil, &block)
+    @opt_parser = OptionParser.new(banner)
+
+    name = symbolize(name)
+
+    init_default
+
+    @options = {}
+
+    instance_eval(&block) if block_given?
+
+    @@applications[name] = self
+  end
+
+  # initialize default application behaviour
+  def init_default
+    setup do
+      default_setup
     end
 
-    attr_reader :options, :opt_parser
-
-    def self.[](name)
-        name = symbolize(name)
-        @@applications[name]
+    dispatch do
+      :main
     end
 
-    def should_parse_config
-        @parse_config = true
+    # empty by default
+    preinit do
     end
 
-    def should_not_parse_config
-        @parse_config = false
+    option("--version", "-V") do |arg|
+      puts "#{Puppet.version}"
+      exit
     end
 
-    def should_parse_config?
-        return @parse_config unless @parse_config.nil?
-        @parse_config = true
+    option("--help", "-h") do |v|
+      help
+    end
+  end
+
+  # This is the main application entry point
+  def run
+    exit_on_fail("initialize") { run_preinit }
+    exit_on_fail("parse options") { parse_options }
+    exit_on_fail("parse configuration file") { Puppet.settings.parse } if should_parse_config?
+    exit_on_fail("prepare for execution") { run_setup }
+    exit_on_fail("run") { run_command }
+  end
+
+  def main
+    raise NotImplementedError, "No valid command or main"
+  end
+
+  def run_command
+    if command = get_command and respond_to?(command)
+      send(command)
+    else
+      main
+    end
+  end
+
+  def default_setup
+    # Handle the logging settings
+    if options[:debug] or options[:verbose]
+      Puppet::Util::Log.newdestination(:console)
+      if options[:debug]
+        Puppet::Util::Log.level = :debug
+      else
+        Puppet::Util::Log.level = :info
+      end
     end
 
-    # used to declare a new command
-    def command(name, &block)
-        meta_def(symbolize(name), &block)
+    Puppet::Util::Log.newdestination(:syslog) unless options[:setdest]
+  end
+
+  def parse_options
+    # get all puppet options
+    optparse_opt = []
+    optparse_opt = Puppet.settings.optparse_addargs(optparse_opt)
+
+    # convert them to OptionParser format
+    optparse_opt.each do |option|
+      @opt_parser.on(*option) do |arg|
+        handlearg(option[0], arg)
+      end
     end
 
-    # used as a catch-all for unknown option
-    def unknown(&block)
-        meta_def(:handle_unknown, &block)
+    # scan command line argument
+    begin
+      @opt_parser.parse!
+    rescue OptionParser::ParseError => detail
+      $stderr.puts detail
+      $stderr.puts "Try '#{$0} --help'"
+      exit(1)
     end
+  end
 
-    # used to declare code that handle an option
-    def option(*options, &block)
-        long = options.find { |opt| opt =~ /^--/ }.gsub(/^--(?:\[no-\])?([^ =]+).*$/, '\1' ).gsub('-','_')
-        fname = "handle_#{long}"
-        if (block_given?)
-            meta_def(symbolize(fname), &block)
-        else
-            meta_def(symbolize(fname)) do |value|
-                self.options["#{long}".to_sym] = value
-            end
-        end
-        @opt_parser.on(*options) do |value|
-            self.send(symbolize(fname), value)
-        end
+  def handlearg(opt, arg)
+    # rewrite --[no-]option to --no-option if that's what was given
+    if opt =~ /\[no-\]/ and !arg
+      opt = opt.gsub(/\[no-\]/,'no-')
     end
-
-    # used to declare accessor in a more natural way in the
-    # various applications
-    def attr_accessor(*args)
-        args.each do |arg|
-            meta_def(arg) do
-                instance_variable_get("@#{arg}".to_sym)
-            end
-            meta_def("#{arg}=") do |value|
-                instance_variable_set("@#{arg}".to_sym, value)
-            end
-        end
+    # otherwise remove the [no-] prefix to not confuse everybody
+    opt = opt.gsub(/\[no-\]/, '')
+    unless respond_to?(:handle_unknown) and send(:handle_unknown, opt, arg)
+      # Puppet.settings.handlearg doesn't handle direct true/false :-)
+      if arg.is_a?(FalseClass)
+        arg = "false"
+      elsif arg.is_a?(TrueClass)
+        arg = "true"
+      end
+      Puppet.settings.handlearg(opt, arg)
     end
+  end
 
-    # used to declare code run instead the default setup
-    def setup(&block)
-        meta_def(:run_setup, &block)
+  # this is used for testing
+  def self.exit(code)
+    exit(code)
+  end
+
+  def help
+    if Puppet.features.usage?
+      ::RDoc::usage && exit
+    else
+      puts "No help available unless you have RDoc::usage installed"
+      exit
     end
+  end
 
-    # used to declare code to choose which command to run
-    def dispatch(&block)
-        meta_def(:get_command, &block)
+  private
+
+  def exit_on_fail(message, code = 1)
+    begin
+      yield
+    rescue RuntimeError, NotImplementedError => detail
+      puts detail.backtrace if Puppet[:trace]
+      $stderr.puts "Could not #{message}: #{detail}"
+      exit(code)
     end
-
-    # used to execute code before running anything else
-    def preinit(&block)
-        meta_def(:run_preinit, &block)
-    end
-
-    def initialize(name, banner = nil, &block)
-        @opt_parser = OptionParser.new(banner)
-
-        name = symbolize(name)
-
-        init_default
-
-        @options = {}
-
-        instance_eval(&block) if block_given?
-
-        @@applications[name] = self
-    end
-
-    # initialize default application behaviour
-    def init_default
-        setup do
-            default_setup
-        end
-
-        dispatch do
-            :main
-        end
-
-        # empty by default
-        preinit do
-        end
-
-        option("--version", "-V") do |arg|
-            puts "#{Puppet.version}"
-            exit
-        end
-
-        option("--help", "-h") do |v|
-            help
-        end
-    end
-
-    # This is the main application entry point
-    def run
-        exit_on_fail("initialize") { run_preinit }
-        exit_on_fail("parse options") { parse_options }
-        exit_on_fail("parse configuration file") { Puppet.settings.parse } if should_parse_config?
-        exit_on_fail("prepare for execution") { run_setup }
-        exit_on_fail("run") { run_command }
-    end
-
-    def main
-        raise NotImplementedError, "No valid command or main"
-    end
-
-    def run_command
-        if command = get_command and respond_to?(command)
-            send(command)
-        else
-            main
-        end
-    end
-
-    def default_setup
-        # Handle the logging settings
-        if options[:debug] or options[:verbose]
-            Puppet::Util::Log.newdestination(:console)
-            if options[:debug]
-                Puppet::Util::Log.level = :debug
-            else
-                Puppet::Util::Log.level = :info
-            end
-        end
-
-        Puppet::Util::Log.newdestination(:syslog) unless options[:setdest]
-    end
-
-    def parse_options
-        # get all puppet options
-        optparse_opt = []
-        optparse_opt = Puppet.settings.optparse_addargs(optparse_opt)
-
-        # convert them to OptionParser format
-        optparse_opt.each do |option|
-            @opt_parser.on(*option) do |arg|
-                handlearg(option[0], arg)
-            end
-        end
-
-        # scan command line argument
-        begin
-            @opt_parser.parse!
-        rescue OptionParser::ParseError => detail
-            $stderr.puts detail
-            $stderr.puts "Try '#{$0} --help'"
-            exit(1)
-        end
-    end
-
-    def handlearg(opt, arg)
-        # rewrite --[no-]option to --no-option if that's what was given
-        if opt =~ /\[no-\]/ and !arg
-            opt = opt.gsub(/\[no-\]/,'no-')
-        end
-        # otherwise remove the [no-] prefix to not confuse everybody
-        opt = opt.gsub(/\[no-\]/, '')
-        unless respond_to?(:handle_unknown) and send(:handle_unknown, opt, arg)
-            # Puppet.settings.handlearg doesn't handle direct true/false :-)
-            if arg.is_a?(FalseClass)
-                arg = "false"
-            elsif arg.is_a?(TrueClass)
-                arg = "true"
-            end
-            Puppet.settings.handlearg(opt, arg)
-        end
-    end
-
-    # this is used for testing
-    def self.exit(code)
-        exit(code)
-    end
-
-    def help
-        if Puppet.features.usage?
-            ::RDoc::usage && exit
-        else
-            puts "No help available unless you have RDoc::usage installed"
-            exit
-        end
-    end
-
-    private
-
-    def exit_on_fail(message, code = 1)
-        begin
-            yield
-        rescue RuntimeError, NotImplementedError => detail
-            puts detail.backtrace if Puppet[:trace]
-            $stderr.puts "Could not #{message}: #{detail}"
-            exit(code)
-        end
-    end
+  end
 end

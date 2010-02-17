@@ -9,45 +9,45 @@ require 'puppet/indirector'
 # A checksum class to model translating checksums to file paths.  This
 # is the new filebucket.
 class Puppet::Checksum
-    include Puppet::Util::Checksums
+  include Puppet::Util::Checksums
 
-    extend Puppet::Indirector
+  extend Puppet::Indirector
 
-    indirects :checksum
+  indirects :checksum
 
-    attr_reader :algorithm, :content
+  attr_reader :algorithm, :content
 
-    def algorithm=(value)
-        raise ArgumentError, "Checksum algorithm #{value} is not supported" unless respond_to?(value)
-        value = value.intern if value.is_a?(String)
-        @algorithm = value
-        # Reset the checksum so it's forced to be recalculated.
-        @checksum = nil
-    end
+  def algorithm=(value)
+    raise ArgumentError, "Checksum algorithm #{value} is not supported" unless respond_to?(value)
+    value = value.intern if value.is_a?(String)
+    @algorithm = value
+    # Reset the checksum so it's forced to be recalculated.
+    @checksum = nil
+  end
 
-    # Calculate (if necessary) and return the checksum
-    def checksum
-        @checksum = send(algorithm, content) unless @checksum
-        @checksum
-    end
+  # Calculate (if necessary) and return the checksum
+  def checksum
+    @checksum = send(algorithm, content) unless @checksum
+    @checksum
+  end
 
-    def initialize(content, algorithm = "md5")
-        raise ArgumentError.new("You must specify the content") unless content
+  def initialize(content, algorithm = "md5")
+    raise ArgumentError.new("You must specify the content") unless content
 
-        @content = content
+    @content = content
 
-        # Init to avoid warnings.
-        @checksum = nil
+    # Init to avoid warnings.
+    @checksum = nil
 
-        self.algorithm = algorithm
-    end
+    self.algorithm = algorithm
+  end
 
-    # This is here so the Indirector::File terminus works correctly.
-    def name
-        checksum
-    end
+  # This is here so the Indirector::File terminus works correctly.
+  def name
+    checksum
+  end
 
-    def to_s
-        "Checksum<{#{algorithm}}#{checksum}>"
-    end
+  def to_s
+    "Checksum<{#{algorithm}}#{checksum}>"
+  end
 end
