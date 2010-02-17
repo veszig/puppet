@@ -13,12 +13,12 @@ class Puppet::Daemon
 
     # Put the daemon into the background.
     def daemonize
-        if pid = fork()
+        if pid = fork
             Process.detach(pid)
             exit(0)
         end
 
-        create_pidfile()
+        create_pidfile
 
         # Get rid of console logging
         Puppet::Util::Log.close(:console)
@@ -107,7 +107,7 @@ class Puppet::Daemon
 
         agent.stop if agent
 
-        remove_pidfile()
+        remove_pidfile
 
         Puppet::Util::Log.close_all
 

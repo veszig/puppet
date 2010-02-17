@@ -23,13 +23,13 @@ class TestBucket < Test::Unit::TestCase
 
     # run through all of the files and exercise the filebucket methods
     def checkfiles(client)
-        files = filelist()
+        files = filelist
 
         # iterate across all of the files
         files.each { |file|
             Puppet.warning file
             out
-            tempdir = tempfile()
+            tempdir = tempfile
             Dir.mkdir(tempdir)
             name = File.basename(file)
             tmppath = File.join(tempdir,name)
@@ -127,7 +127,7 @@ class TestBucket < Test::Unit::TestCase
 
     def setup
         super
-        @bucket = tempfile()
+        @bucket = tempfile
     end
 
     #def teardown
@@ -139,7 +139,7 @@ class TestBucket < Test::Unit::TestCase
     # this calls the direct server methods, which are different than the
     # Dipper methods
     def test_localserver
-        files = filelist()
+        files = filelist
         server = nil
         assert_nothing_raised {
             server = Puppet::Network::Handler.filebucket.new(
@@ -175,7 +175,7 @@ class TestBucket < Test::Unit::TestCase
 
     # test with a server and a Dipper
     def test_localboth
-        files = filelist()
+        files = filelist
 
         bucket = nil
         client = nil
@@ -269,7 +269,7 @@ class TestBucket < Test::Unit::TestCase
     def test_add_path
         bucket = Puppet::Network::Handler.filebucket.new(:Path => @bucket)
 
-        file = tempfile()
+        file = tempfile
 
         assert(! FileTest.exists?(file), "file already exists")
 
