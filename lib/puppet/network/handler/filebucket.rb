@@ -96,7 +96,7 @@ class Puppet::Network::Handler # :nodoc:
             end
 
             # Write the file to disk.
-            msg = "Adding %s(%s)" % [path, md5]
+            msg = "Adding #{path}(#{md5})"
             msg += " from #{client}" if client
             self.info msg
 
@@ -169,9 +169,9 @@ class Puppet::Network::Handler # :nodoc:
             # If the contents don't match, then we've found a conflict.
             # Unlikely, but quite bad.
             if curfile != contents
-                raise(BucketError, "Got passed new contents for sum %s" % md5, caller)
+                raise(BucketError, "Got passed new contents for sum #{md5}", caller)
             else
-                msg = "Got duplicate %s(%s)" % [path, md5]
+                msg = "Got duplicate #{path}(#{md5})"
                 msg += " from #{client}" if client
                 self.info msg
             end

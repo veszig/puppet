@@ -85,7 +85,7 @@ module Puppet
                 @bucket = Puppet::Network::Client.client(:Dipper).new(args)
             rescue => detail
                 puts detail.backtrace if Puppet[:trace]
-                self.fail("Could not create %s filebucket: %s" % [type, detail])
+                self.fail("Could not create #{type} filebucket: #{detail}")
             end
 
             @bucket.name = self.name

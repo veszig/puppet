@@ -17,7 +17,7 @@ class TestBucket < Test::Unit::TestCase
             @num = 1
         end
 
-        #Puppet.err "#{Process.pid}: %s: %s" % [@num, memory()]
+        #Puppet.err "#{Process.pid}: #{@num}: #{memory()}"
         #gcdebug(String)
     end
 
@@ -70,7 +70,7 @@ class TestBucket < Test::Unit::TestCase
 
             # back it up
             assert_nothing_raised {
-                #STDERR.puts("backing up %s" % tmppath) if $debug
+                #STDERR.puts("backing up #{tmppath}") if $debug
                 nsum = client.backup(tmppath)
             }
             out
@@ -86,7 +86,7 @@ class TestBucket < Test::Unit::TestCase
 
             # and verify it actually got restored
             contents = File.open(tmppath) { |rf|
-                #STDERR.puts("reading %s" % tmppath) if $debug
+                #STDERR.puts("reading #{tmppath}") if $debug
                 rf.read
             }
             out
@@ -118,7 +118,7 @@ class TestBucket < Test::Unit::TestCase
                 begin
                     path = %x{which #{file}}
                 rescue => detail
-                    #STDERR.puts "Could not search for binaries: %s" % detail
+                    #STDERR.puts "Could not search for binaries: #{detail}"
                     next
                 end
 
@@ -137,7 +137,7 @@ class TestBucket < Test::Unit::TestCase
     end
 
     #def teardown
-    #    system("lsof -p %s" % Process.pid)
+    #    system("lsof -p #{Process.pid}")
     #    super
     #end
 
@@ -161,14 +161,14 @@ class TestBucket < Test::Unit::TestCase
 
             # add a file to the repository
             assert_nothing_raised {
-                #STDERR.puts("adding %s" % file) if $debug
+                #STDERR.puts("adding #{file}") if $debug
                 md5 = server.addfile(Base64.encode64(contents),file)
             }
 
             # and get it back again
             newcontents = nil
             assert_nothing_raised {
-                #STDERR.puts("getting %s" % file) if $debug
+                #STDERR.puts("getting #{file}") if $debug
                 newcontents = Base64.decode64(server.getfile(md5))
             }
 
@@ -221,7 +221,7 @@ class TestBucket < Test::Unit::TestCase
 
         a, b, pathfile = bucket.class.paths(bucket.path, sum)
 
-        assert(FileTest.exists?(pathfile), "No path file at %s" % pathfile)
+        assert(FileTest.exists?(pathfile), "No path file at #{pathfile}")
 
         assert_equal("/my/file\n", File.read(pathfile))
     end

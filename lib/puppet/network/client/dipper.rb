@@ -19,7 +19,7 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
     # Back up a file to our bucket
     def backup(file)
         unless FileTest.exists?(file)
-            raise(ArgumentError, "File %s does not exist" % file)
+            raise(ArgumentError, "File #{file} does not exist")
         end
         contents = ::File.read(file)
         unless local?
@@ -29,7 +29,7 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
             return @driver.addfile(contents,file)
         rescue => detail
             puts detail.backtrace if Puppet[:trace]
-            raise Puppet::Error, "Could not back up %s: %s" % [file, detail]
+            raise Puppet::Error, "Could not back up #{file}: #{detail}"
         end
     end
 
@@ -73,7 +73,7 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
                     ::File.chmod(changed, file)
                 end
             else
-                Puppet.err "Could not find file with checksum %s" % sum
+                Puppet.err "Could not find file with checksum #{sum}"
                 return nil
             end
             return newsum

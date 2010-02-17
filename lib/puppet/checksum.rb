@@ -19,7 +19,7 @@ class Puppet::Checksum
 
     def algorithm=(value)
         unless respond_to?(value)
-            raise ArgumentError, "Checksum algorithm %s is not supported" % value
+            raise ArgumentError, "Checksum algorithm #{value} is not supported"
         end
         value = value.intern if value.is_a?(String)
         @algorithm = value
@@ -52,6 +52,6 @@ class Puppet::Checksum
     end
 
     def to_s
-        "Checksum<{%s}%s>" % [algorithm, checksum]
+        "Checksum<{#{algorithm}}#{checksum}>"
     end
 end
