@@ -18,9 +18,7 @@ class Puppet::Checksum
     attr_reader :algorithm, :content
 
     def algorithm=(value)
-        unless respond_to?(value)
-            raise ArgumentError, "Checksum algorithm #{value} is not supported"
-        end
+        raise ArgumentError, "Checksum algorithm #{value} is not supported" unless respond_to?(value)
         value = value.intern if value.is_a?(String)
         @algorithm = value
         # Reset the checksum so it's forced to be recalculated.
@@ -29,9 +27,7 @@ class Puppet::Checksum
 
     # Calculate (if necessary) and return the checksum
     def checksum
-        unless @checksum
-            @checksum = send(algorithm, content)
-        end
+        @checksum = send(algorithm, content) unless @checksum
         @checksum
     end
 

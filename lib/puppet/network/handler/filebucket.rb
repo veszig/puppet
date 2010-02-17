@@ -72,9 +72,7 @@ class Puppet::Network::Handler # :nodoc:
         # Accept a file from a client and store it by md5 sum, returning
         # the sum.
         def addfile(contents, path, client = nil, clientip = nil)
-            if client
-                contents = Base64.decode64(contents)
-            end
+            contents = Base64.decode64(contents) if client
             md5 = Digest::MD5.hexdigest(contents)
 
             bpath, bfile, pathpath = FileBucket.paths(@path,md5)
@@ -82,9 +80,7 @@ class Puppet::Network::Handler # :nodoc:
             # If the file already exists, just return the md5 sum.
             if FileTest.exists?(bfile)
                 # If verification is enabled, then make sure the text matches.
-                if conflict_check?
-                    verify(contents, md5, bfile)
-                end
+                verify(contents, md5, bfile) if conflict_check?
                 return md5
             end
 
@@ -120,9 +116,7 @@ class Puppet::Network::Handler # :nodoc:
             unless FileTest.exists?(bfile)
                 # Try the old flat style.
                 bpath, bfile, bpaths = FileBucket.oldpaths(@path,md5)
-                unless FileTest.exists?(bfile)
-                    return false
-                end
+                return false unless FileTest.exists?(bfile)
             end
 
             contents = nil

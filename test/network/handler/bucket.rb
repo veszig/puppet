@@ -60,9 +60,7 @@ class TestBucket < Test::Unit::TestCase
             assert(tsum == osum)
 
             # modify our tmp file
-            unless FileTest.writable?(tmppath)
-                File.chmod(0644, tmppath)
-            end
+            File.chmod(0644, tmppath) unless FileTest.writable?(tmppath)
             File.open(tmppath,File::WRONLY|File::TRUNC) { |wf|
                 wf.print "This is some test text\n"
             }
@@ -110,9 +108,7 @@ class TestBucket < Test::Unit::TestCase
         }.each { |file|
             # if it's fully qualified, just add it
             if file =~ /^\//
-                if FileTest.exists?(file)
-                    @files.push file
-                end
+                @files.push file if FileTest.exists?(file)
             else
                 # else if it's unqualified, look for it in our path
                 begin
@@ -122,9 +118,7 @@ class TestBucket < Test::Unit::TestCase
                     next
                 end
 
-                if path != ""
-                    @files.push path.chomp
-                end
+                @files.push path.chomp if path != ""
             end
         }
 

@@ -52,9 +52,7 @@ Puppet::Reports.register_report(:tagmail) do
 
             # Now go through and remove any messages that match our negative tags
             messages = messages.reject do |log|
-                if neg.detect  {|tag| log.tagged?(tag)}
-                    true
-                end
+                true if neg.detect  {|tag| log.tagged?(tag)}
             end
 
             if messages.empty?
@@ -137,9 +135,7 @@ Puppet::Reports.register_report(:tagmail) do
                         end
                     end
                 rescue => detail
-                    if Puppet[:debug]
-                        puts detail.backtrace
-                    end
+                    puts detail.backtrace if Puppet[:debug]
                     raise Puppet::Error,
                         "Could not send report emails through smtp: #{detail}"
                 end
@@ -156,9 +152,7 @@ Puppet::Reports.register_report(:tagmail) do
                         end
                     end
                 rescue => detail
-                    if Puppet[:debug]
-                        puts detail.backtrace
-                    end
+                    puts detail.backtrace if Puppet[:debug]
                     raise Puppet::Error,
                         "Could not send report emails via sendmail: #{detail}"
                 end

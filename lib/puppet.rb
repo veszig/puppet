@@ -158,7 +158,5 @@ require 'puppet/module'
 require 'puppet/util/storage'
 require 'puppet/status'
 
-if Puppet[:storeconfigs]
-    require 'puppet/rails'
-end
+require 'puppet/rails' if Puppet[:storeconfigs]
 

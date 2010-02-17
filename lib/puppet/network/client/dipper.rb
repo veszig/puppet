@@ -18,13 +18,9 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
 
     # Back up a file to our bucket
     def backup(file)
-        unless FileTest.exists?(file)
-            raise(ArgumentError, "File #{file} does not exist")
-        end
+        raise(ArgumentError, "File #{file} does not exist") unless FileTest.exists?(file)
         contents = ::File.read(file)
-        unless local?
-            contents = Base64.encode64(contents)
-        end
+        contents = Base64.encode64(contents) unless local?
         begin
             return @driver.addfile(contents,file)
         rescue => detail
@@ -36,9 +32,7 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
     # Retrieve a file by sum.
     def getfile(sum)
         if newcontents = @driver.getfile(sum)
-            unless local?
-                newcontents = Base64.decode64(newcontents)
-            end
+            newcontents = Base64.decode64(newcontents) unless local?
             return newcontents
         end
         return nil
@@ -69,9 +63,7 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
                 ::File.open(file, ::File::WRONLY|::File::TRUNC|::File::CREAT) { |of|
                     of.print(newcontents)
                 }
-                if changed
-                    ::File.chmod(changed, file)
-                end
+                ::File.chmod(changed, file) if changed
             else
                 Puppet.err "Could not find file with checksum #{sum}"
                 return nil
