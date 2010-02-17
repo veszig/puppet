@@ -33,7 +33,7 @@ class Puppet::Agent
 
     def restart
         configure_delayed_restart and return if running?
-        Process.kill(:HUP, $$)
+        Process.kill(:HUP, $PID)
         @needing_restart = false
     end
 

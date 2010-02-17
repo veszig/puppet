@@ -238,7 +238,7 @@ describe Puppet::Agent do
         it "should hup itself if not running" do
             @agent.expects(:running?).returns false
 
-            Process.expects(:kill).with(:HUP, $$)
+            Process.expects(:kill).with(:HUP, $PID)
 
             @agent.restart
         end
